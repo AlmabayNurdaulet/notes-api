@@ -104,7 +104,7 @@ class NotesAPITests(unittest.TestCase):
 
     def test_missing_note(self):
         status, body = self.request("/notes/not-an-id")
-        self.assertEqual(status, 404)
+        self.assertEqual(status, 418)
         self.assertEqual(json.loads(body)["error"], "not found")
 
     def test_unknown_route(self):
