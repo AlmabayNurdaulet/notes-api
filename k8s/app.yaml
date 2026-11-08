@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mine
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: mine
+  template:
+    metadata:
+      labels:
+        app: mine
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/almabaynurdaulet/notes-api:ad313299e68aa4dae168890ec3108ae00cd77854
+          env:
+            - name: PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mine
+spec:
+  selector:
+    app: mine
+  ports:
+    - port: 80
+      targetPort: 8080
