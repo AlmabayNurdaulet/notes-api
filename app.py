@@ -4,6 +4,7 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 notes = {}
+NOTES_LIMIT = int(os.environ.get('NOTES_LIMIT', 100))
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -14,7 +15,6 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(data).encode())
 
     def do_GET(self):
-        # Health check
         if self.path == '/healthz':
             self.send_response(200)
             self.send_header('Content-Type', 'text/plain')
@@ -22,12 +22,10 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(b'OK')
             return
 
-        # List all notes
         if self.path == '/':
             self._send_json(200, {'notes': list(notes.values())})
             return
 
-        # Get one note by id
         if self.path.startswith('/notes/'):
             note_id = self.path.split('/')[-1]
             if note_id in notes:
@@ -39,8 +37,11 @@ class Handler(BaseHTTPRequestHandler):
         self._send_json(404, {'error': 'not found'})
 
     def do_POST(self):
-        # Create a note
         if self.path == '/notes':
+            if len(notes) >= NOTES_LIMIT:
+                self._send_json(400, {'error': 'note limit reached'})
+                return
+
             length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(length) if length else b'{}'
             try:
@@ -48,6 +49,7 @@ class Handler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 self._send_json(400, {'error': 'invalid json'})
                 return
+
             note_id = str(len(notes) + 1)
             notes[note_id] = {'id': note_id, 'text': data.get('text', '')}
             self._send_json(201, notes[note_id])
