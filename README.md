@@ -125,3 +125,9 @@ git update-index --chmod=+x scripts/run.sh scripts/test.sh
 ```
 
 Commit and push the mode change. `.gitattributes` preserves Unix line endings.
+
+## Rollback
+
+To roll back a deployment, revert the Git commit that changed the image tag:
+`git revert <commit>`
+Then push the revert commit to `main`. Argo CD detects the change and syncs the previous image from `k8s/`. Do not use `kubectl rollout undo`; Git is the source of truth.
